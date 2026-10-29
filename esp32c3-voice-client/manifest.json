@@ -1,0 +1,16 @@
+{
+  "name": "ESP32-C3 Voice Client",
+  "version": "1.0.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chip_family": "ESP32-C3",
+      "parts": [
+        {
+          "path": "esp32c3-voice-client.ino.esp32c3.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
