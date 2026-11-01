@@ -176,7 +176,7 @@ static void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
     case WStype_TEXT:
       handleTextMessage(payload, length);
       break;
-    case WStype_BINARY:
+    case WStype_BIN:
       ringPush(payload, length);
       break;
     default:
