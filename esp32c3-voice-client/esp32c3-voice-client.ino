@@ -169,17 +169,25 @@ static void webSocketEvent(WStype_t type, uint8_t *payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       wsConnected = false;
+      Serial.println("WS: frankopplad");
       break;
     case WStype_CONNECTED:
       wsConnected = true;
+      Serial.printf("WS: ansluten till ws://%s:%d%s\n", WS_HOST, WS_PORT, WS_PATH);
       break;
     case WStype_TEXT:
+      Serial.printf("WS TEXT (%u bytes): %.*s\n", (unsigned)length, (int)length, (const char *)payload);
       handleTextMessage(payload, length);
       break;
     case WStype_BIN:
+      Serial.printf("WS BIN mottagen: %u bytes (totalt i ring: %u)\n", (unsigned)length, (unsigned)ringUsed());
       ringPush(payload, length);
       break;
-    default:
+    case WStype_ERROR:
+      Serial.println("WS: fel");
+      break;
+    case WStype_PING:
+    case WStype_PONG:
       break;
   }
 }
@@ -214,16 +222,21 @@ static void i2sInit() {
 static void wifiInit() {
   WiFi.mode(WIFI_STA);
   if (strcmp(WIFI_SSID, "DITT_WIFI_SSID") != 0) {
+    Serial.printf("Ansluter till WiFi '%s'...\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     uint32_t start = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_WAIT_MS) {
       delay(200);
+      Serial.print(".");
     }
+    Serial.println();
   }
   if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi ej anslutet - startar WiFiManager AP 'ESP32-Voice-Setup'");
     WiFiManager wm;
     wm.autoConnect(WIFI_AP_NAME);
   }
+  Serial.printf("WiFi ansluten! IP: %s\n", WiFi.localIP().toString().c_str());
 }
 
 static void drawHeart(int16_t x, int16_t y, int16_t s) {
@@ -319,15 +332,18 @@ static void audioRxTask() {
   i2s_channel_read(i2sRx, buf, sizeof(buf), &readBytes, 10);
   if (readBytes > 0 && wsConnected && (listenState == ST_LISTENING || CONTINUOUS_STREAM)) {
     ws.sendBIN(buf, readBytes);
-  }
-}
+  }}
 
 void setup() {
   Serial.begin(115200);
+  delay(500);
+  Serial.println();
+  Serial.println("=== ESP32-C3 Voice Client bootar ===");
 
   Wire.begin(OLED_SDA, OLED_SCL);
   u8g2.setI2CAddress(OLED_ADDR * 2);
   u8g2.begin();
+  Serial.println("OLED init klar");
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tr);
   u8g2.setCursor(10, 32);
@@ -338,8 +354,10 @@ void setup() {
   nextBlinkMs = millis() + 2000;
 
   i2sInit();
+  Serial.println("I2S init klar");
   wifiInit();
   wsConnect();
+  Serial.println("Setup klar, gar in i loop()");
 }
 
 void loop() {
