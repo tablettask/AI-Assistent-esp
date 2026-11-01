@@ -97,6 +97,20 @@ Efter första flashningen: om WiFi-konstanterna inte är ifyllda startar ett WiF
 
 ## Felsökning
 
+### Webbflashning: "Serial data stream stopped: Possible serial noise or corruption" / "Failed to connect"
+
+Detta är nästan alltid ett **anslutningsproblem, inte ett fel på .bin-filen**. Prova i denna ordning:
+
+1. **Stäng Serial Monitor/Plotter i Arduino IDE** (och andra program som håller COM-porten, t.ex. PuTTY/Tera Term). Porten måste vara ledig.
+2. **Rätt COM-port**: i Chrome/Edge, välj den port som dyker upp när du kopplar i USB (kolla Enhetshanteraren – ska vara t.ex. "USB-SERIAL CH340"/"CH343" eller "USB JTAG/serial debug unit"). Välj INTE Bluetooth-porten.
+3. **Sätt ESP32-C3 i download-läge manuellt** (SuperMini med CH340/CH343-brygga gör inte alltid detta automatiskt):
+   - Håll in **BOOT**-knappen (GPIO9), tryck kort på **RESET/EN**, släpp BOOT. Alternativt: håll BOOT och klicka "Connect"/"Install" i webbläsaren, släpp när synkningen börjat.
+4. **Byt USB-kabel och port**: använd en riktig datakabel (vissa är bara laddkablar) och koppla direkt i datorn (inte via hubb).
+5. **Sänk baud rate**: i install-dialogen, välj 115200 i stället för 921600.
+6. **Rätt webbläsare**: Chrome, Edge eller Opera över HTTPS. Fungerar inte i Firefox/Safari/iOS (saknar Web Serial).
+7. **Drivrutin**: installera CH340/CH343 eller CP210x-drivrutin om porten saknas i Enhetshanteraren.
+
+### Övrigt
 - Ingen ljud ut/in: kontrollera att BCLK/WS verkligen delas (GPIO 2 / GPIO 1) och att INMP441 L/R är GND.
 - WebSocket kopplar ner: kontrollera `WS_HOST`/`WS_PORT` och att servern accepterar binära ramar.
 - Ögonen frystes: `eyesUpdate()` körs icke-blockerande i `loop()`; I2S använder timeouts (10–20 ms) så ljudet ska inte blockeras.
